@@ -10,14 +10,15 @@ class IDSNet(object):
     def __init__(self,
                  dropout,
                  classes,
-                 flow_length):
+                 flow_length,
+                 batch_size):
         self.class_num = classes
         self.dropout = dropout
         self.size = 64  #size of hidden nodes
-        self.batchsize = 64
+        self.batchsize = batch_size
         self.flow_length = flow_length  #the length of packet of flows
-        self.x_flow = tf.placeholder(tf.float32, shape = [None, self.flow_length, 80], name = "input_flow")   #input tensor [batch, flowlength, feature_length]
-        self.y = tf.placeholder(tf.int32, shape = [None], name = "flow_class")
+        self.x_flow = tf.placeholder(tf.float32, shape=[None, self.flow_length, 80], name = "input_flow")   #input tensor [batch, flowlength, feature_length]
+        self.y = tf.placeholder(tf.int32, shape=[None], name = "flow_class")
         self.loss = 0
         self.acc = 0
 
@@ -34,7 +35,8 @@ class IDSNet(object):
                 if flow > 0:
                     tf.get_variable_scope().reuse_variables()
                 _, (c_state, h_state) = cell(self.x_flow[:, flow, :], state)
-                out.append(h_state)
+                out.append(tf.reshape(h_state, shape=[-1, 1, self.size]))
+            out = tf.concat(out,1)
         return out
 
     def flow_classification(self, out):
