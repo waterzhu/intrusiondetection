@@ -1,3 +1,4 @@
+
 # coding=utf-8
 #!/usr/bin/python3
 import os
@@ -6,6 +7,7 @@ import random
 import tensorflow as tf
 
 from simpleLSTM import IDSNet
+from simpleGRU import IDSGRUNet
 
 # TF log level
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -77,13 +79,22 @@ def train(input_data_train, input_data_test):
     with tf.Graph().as_default():
         sess_config = tf.ConfigProto()
         sess_config.gpu_options.allow_growth = True
+        n = 1
         with tf.Session(config=sess_config).as_default() as sess:
-            ids = IDSNet(
-                FLAGS.dropout_keep_prob,
-                FLAGS.num_classes,
-                FLAGS.flow_length,
-                FLAGS.batch_size
-            )
+            if n == 1:
+                ids = IDSGRUNet(
+                    FLAGS.dropout_keep_prob,
+                    FLAGS.num_classes,
+                    FLAGS.flow_length,
+                    FLAGS.batch_size
+                )
+            else:
+                ids = IDSNet(
+                    FLAGS.dropout_keep_prob,
+                    FLAGS.num_classes,
+                    FLAGS.flow_length,
+                    FLAGS.batch_size
+                )
             print('=' * 30)
             global_step = tf.Variable(0, name = 'global_step')
             learning_rate = tf.train.exponential_decay(
@@ -174,7 +185,6 @@ def main(_):
 
 if __name__ == "__main__":
     tf.app.run()
-
 
 
 
