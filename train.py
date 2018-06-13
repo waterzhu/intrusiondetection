@@ -1,4 +1,5 @@
 # coding=utf-8
+#!/usr/bin/python3
 import os
 import datetime
 import random
@@ -10,29 +11,30 @@ from simpleLSTM import IDSNet
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 # =========================================================================
 flags = tf.flags
-logging = tf.logging
+#logging = tf.logging
 # Data params
 # ========================================================================
 flags.DEFINE_string("Input_data", './data/train.csv','Data for training')
 flags.DEFINE_string('Test_data', './data/test.csv', 'Data for test')
 # Model params
 # =========================================================
-flags.DEFINF_integer("first_layer_node", 64, 'nodes in first layer')
-flags.DEFINF_integer("second_layer_node", 50, 'nodes in first layer(if necessary)')
-flags.DEFINE_integer("num_classes", 7, "Number of authors(default: 7")
+flags.DEFINE_integer("first_layer_node", 64, 'nodes in first layer')
+flags.DEFINE_integer("second_layer_node", 50, 'nodes in first layer(if necessary)')
+flags.DEFINE_integer("num_classes", 3, "Number of authors(default: 7")
 flags.DEFINE_integer("flow_length", 10, "Number of flows in each sample")
 flags.DEFINE_float("dropout_keep_prob", 1.0, "FC layer dropout keep probability (default: 1.0)")
 # Training parameters
 # =================================================
 flags.DEFINE_float("learning_rate", 0.003, "Learning rate (default: 0.003)")
-flags.DEFINE_integer("batch_size", 64, "Batch Size (default: 64)")
-flags.DEFINE_integer("num_epochs", 200, "Number of training epochs (default: 200)")
+flags.DEFINE_integer("batch_size", 20, "Batch Size (default: 64)")
+flags.DEFINE_integer("num_epochs", 3, "Number of training epochs (default: 200)")
 flags.DEFINE_boolean("is_verbose", True, "Print loss (default: True)")
+flags.DEFINE_integer("evaluate_every",10,"when to dev")
 # ===========================================================
 FLAGS = flags.FLAGS
 
 print("\nParameters:")
-for attr, value in sorted(FLAGS.flag_values_dict().items()):
+for attr, value in sorted(FLAGS.__dict__['__flags'].items()):
     print("{}={}".format(attr.upper(), value))
 print("="*30)
 
@@ -58,7 +60,7 @@ def load_data():
         list7.append(list4)
         list7.append(list5)
         list7.append(list6)
-    print(list7+"\n")
+ #   print(list7)
     list8 = list7
     return list7, list8
 
@@ -87,13 +89,14 @@ def train(input_data_train, input_data_test):
             learning_rate = tf.train.exponential_decay(
                 learning_rate = FLAGS.learning_rate,
                 global_step = global_step,
-                decay_step = 100,
+                decay_steps = 100,
                 decay_rate = 0.99,
                 staircase = True,
-                name = 'rl_decay'
+                name = "rl_decay"
             )
             optimizer = tf.train.AdamOptimizer(learning_rate)
-            train_op = optimizer.minimize(ids.loss)
+            grads = optimizer.compute_gradients(ids.loss)
+            train_op = optimizer.apply_gradients(grads)
 
             sess.run(tf.global_variables_initializer())
 
@@ -123,19 +126,26 @@ def train(input_data_train, input_data_test):
             for epoch in range(FLAGS.num_epochs):
                 print('waiting for generating train data')
                 train_data = read_batch(input_data_train, FLAGS.batch_size)
-                train_data_len = len(train_data)
+#                print(len(input_data_train))
+#                print(input_data_train[1])
+                train_data_len = len(input_data_train)
                 num_batches = int(train_data_len/FLAGS.batch_size)
                 print("{} mini batches per epoch".format(num_batches))
                 for batch in range(num_batches):
                     train_data_feed = next(train_data)
-                    train_data_x = train_data_feed[:,0:-1,:]
-                    train_data_y = train_data_feed[:,-1,:]
+ #                   print(len(train_data_feed))
+ #                   print(train_data_feed[:][:-1])
+                    train_data_x = []
+                    train_data_y = []
+                    for i in range(FLAGS.batch_size):
+                        train_data_x.append(train_data_feed[i][:-1])
+                        train_data_y.append(train_data_feed[i][-1])
                     train_step(train_data_x, train_data_y)
                     current_step = tf.train.global_step(sess, global_step)
 
                     if current_step % FLAGS.evaluate_every == 0:
                         print("\nEvaluation:")
-                        dev_num_batches = int(len(input_data_test)/FLAGS.batch_size)
+                        dev_num_batches = int(len(list(input_data_test))/FLAGS.batch_size)
                         print("awaiting for generating dev data...")
                         test_data =  read_batch(input_data_test, FLAGS.batch_size)
 
@@ -143,8 +153,11 @@ def train(input_data_train, input_data_test):
                         dev_acc = []
                         for dev_batch in range(dev_num_batches):
                             test_data_feed = next(test_data)
-                            test_data_x = test_data_feed[:,0:-1,:]
-                            test_data_y = test_data_feed[:,-1,:]
+                            test_data_x = []
+                            test_data_y = []
+                            for i in range(FLAGS.batch_size):
+                                test_data_x.append(test_data_feed[i][:-1])
+                                test_data_y.append(test_data_feed[i][-1])
                             loss1, acc1 = dev_step(test_data_x, test_data_y)
                             dev_loss.append(loss1)
                             dev_acc.append(acc1)
@@ -154,7 +167,7 @@ def train(input_data_train, input_data_test):
                                      sum(dev_acc) / len(dev_loss)))
                         print("\n"+"=" * 30)
 
-def main():
+def main(_):
     print("Model start...\n")
     input_train, input_test = load_data()
     train(input_train,input_test)

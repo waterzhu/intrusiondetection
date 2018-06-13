@@ -14,13 +14,13 @@ class IDSNet(object):
                  batch_size):
         self.class_num = classes
         self.dropout = dropout
-        self.size = 64  #size of hidden nodes
+        self.size = 64  #size of hidden nodes in LSTM
         self.batchsize = batch_size
+        self.fcsize = 64 #size of hidden nodes in FC
         self.flow_length = flow_length  #the length of packet of flows
-        self.x_flow = tf.placeholder(tf.float32, shape=[None, self.flow_length, 80], name = "input_flow")   #input tensor [batch, flowlength, feature_length]
+        self.x_flow = tf.placeholder(tf.float32, shape=[None, self.flow_length, 20], name = "input_flow")   #input tensor [batch, flowlength, feature_length]
         self.y = tf.placeholder(tf.int32, shape=[None], name = "flow_class")
-        self.loss = 0
-        self.acc = 0
+        self.creat_model()
 
     def creat_model(self):
         state_out = self.simpleLSTM()
@@ -31,18 +31,21 @@ class IDSNet(object):
         out = []
         with tf.variable_scope("Simplelstm"):
             state = cell.zero_state(self.batchsize, dtype = tf.float32)
-            for flow in self.flow_length:
+            for flow in range(self.flow_length):
                 if flow > 0:
                     tf.get_variable_scope().reuse_variables()
                 _, (c_state, h_state) = cell(self.x_flow[:, flow, :], state)
-                out.append(tf.reshape(h_state, shape=[-1, 1, self.size]))
-            out = tf.concat(out,1)
+#                out.append(tf.reshape(h_state, shape=[-1, 1, self.size]))
+#            print(out)
+#            out = tf.concat(out,1)
+            out = h_state
+            print(out)
         return out
 
     def flow_classification(self, out):
         with tf.name_scope('fc'):
             out_dropout = tf.nn.dropout(out, self.dropout)
-            W = tf.get_variable(tf.truncated_normal([self.size, self.class_num], stddev = 0.1), dtype = tf.float32)
+            W = tf.get_variable("full", [self.fcsize, self.class_num])
             bias = tf.Variable(tf.constant(0.1, shape=[self.class_num]), dtype=tf.float32)
             class_output = tf.nn.softmax(tf.matmul(out_dropout, W) + bias)
 
