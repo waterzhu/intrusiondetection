@@ -34,12 +34,12 @@ class IDSNet(object):
             for flow in range(self.flow_length):
                 if flow > 0:
                     tf.get_variable_scope().reuse_variables()
-                _, (c_state, h_state) = cell(self.x_flow[:, flow, :], state)
+                output, (c_state, h_state) = cell(self.x_flow[:, flow, :], state)
 #                out.append(tf.reshape(h_state, shape=[-1, 1, self.size]))
 #            print(out)
 #            out = tf.concat(out,1)
-            out = h_state
-            print(out)
+            out = output
+#            print(out)
         return out
 
     def flow_classification(self, out):
