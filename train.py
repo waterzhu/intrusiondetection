@@ -43,20 +43,19 @@ print("="*30)
 def load_data():
     """
     load data from train and test
-    return: tf.data
     """
-    list1 = [0 for i in range(20)]
-    list2 = [1 for i in range(20)]
-    list3 = [0 for i in range(10)] + [1 for i in range(10)]
+    list1 = ["0" for i in range(20)]
+    list2 = ['1' for i in range(20)]
+    list3 = ['0' for i in range(10)] + ['1' for i in range(10)]
     print("list1:{}\nlist2:{}\nlist3:{}\n".format(list1,list2,list3))
     list4,list5,list6 = [],[],[]
     for i in range(10):
         list4.append(list1)
         list5.append(list2)
         list6.append(list3)
-    list4.append(1)
-    list5.append(2)
-    list6.append(3)
+    list4.append('1')
+    list5.append('2')
+    list6.append('3')
     list7 = []
     for i in range(100):
         list7.append(list4)
@@ -65,6 +64,8 @@ def load_data():
  #   print(list7)
     list8 = list7
     return list7, list8
+    
+
 
 def read_batch(input, batch_size):
     batch = []
@@ -96,7 +97,7 @@ def train(input_data_train, input_data_test):
                     FLAGS.batch_size
                 )
             print('=' * 30)
-            global_step = tf.Variable(0, name = 'global_step')
+            global_step = tf.Variable(0, name = 'global_step', trainable = False)
             learning_rate = tf.train.exponential_decay(
                 learning_rate = FLAGS.learning_rate,
                 global_step = global_step,
@@ -107,7 +108,7 @@ def train(input_data_train, input_data_test):
             )
             optimizer = tf.train.AdamOptimizer(learning_rate)
             grads = optimizer.compute_gradients(ids.loss)
-            train_op = optimizer.apply_gradients(grads)
+            train_op = optimizer.apply_gradients(grads, global_step = global_step)
 
             sess.run(tf.global_variables_initializer())
 
