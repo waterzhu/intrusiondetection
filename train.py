@@ -18,21 +18,21 @@ flags = tf.flags
 # ========================================================================
 flags.DEFINE_string("Input_data", './data/train.csv', 'Data for training')
 flags.DEFINE_string('Test_data', './data/test.csv', 'Data for test')
-flags.DEFINE_integer('Feature_num', 79, 'numbers of features in one flow (defult:79)')
+flags.DEFINE_integer('Feature_num', 78, 'numbers of features in one flow (defult:79)')
 # Model params
 # =========================================================
 flags.DEFINE_integer("first_layer_node", 64, 'nodes in first layer')
 flags.DEFINE_integer("second_layer_node", 50, 'nodes in first layer(if necessary)')
-flags.DEFINE_integer("num_classes", 3, "Number of authors(default: 7")
+flags.DEFINE_integer("num_classes", 2, "Number of authors(default: 7")
 flags.DEFINE_integer("flow_length", 5, "Number of flows in each sample")
 flags.DEFINE_float("dropout_keep_prob", 1.0, "FC layer dropout keep probability (default: 1.0)")
 # Training parameters
 # =================================================
 flags.DEFINE_float("learning_rate", 0.003, "Learning rate (default: 0.003)")
-flags.DEFINE_integer("batch_size", 20, "Batch Size (default: 64)")
-flags.DEFINE_integer("num_epochs", 3, "Number of training epochs (default: 200)")
+flags.DEFINE_integer("batch_size", 64, "Batch Size (default: 64)")
+flags.DEFINE_integer("num_epochs", 200, "Number of training epochs (default: 200)")
 flags.DEFINE_boolean("is_verbose", True, "Print loss (default: True)")
-flags.DEFINE_integer("evaluate_every", 10, "when to dev")
+flags.DEFINE_integer("evaluate_every", 10000, "when to dev")
 # ===========================================================
 FLAGS = flags.FLAGS
 
@@ -67,19 +67,22 @@ def load_data():
     list8 = list7
     return list7, list8
     """
-    with open('FLAGS.Input_data', 'r') as train_data:
+    with open(FLAGS.Input_data, 'r') as train_data:
         reader = csv.reader(train_data)
         table = [row for row in reader]
 #        feature = [row[:-1] for row in table]
-#        label = [row[-1] for row in table]
+        label = [row[-1] for row in table]
+#        print(label)
         train_table = []
         for i in range(len(table)):
             features = []
             for j in range(FLAGS.flow_length):
                 features.append(table[i][j*FLAGS.Feature_num:(j+1)*FLAGS.Feature_num])
+            features.append(label[i])
             train_table.append(features)
-            train_table.append(table[i][-1])
         test_table = train_table
+#    print(train_table[0])
+#    print(len(test_table[0]))
     return train_table, test_table
 
 
@@ -202,8 +205,10 @@ def train(input_data_train, input_data_test):
 
 
 def main(_):
-    print("Model start...\n")
+    print("Load data...\n")
     input_train, input_test = load_data()
+    print('Complete\n')
+    print('Model Start...\n')
     train(input_train, input_test)
 
 

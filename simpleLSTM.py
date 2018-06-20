@@ -18,7 +18,7 @@ class IDSNet(object):
         self.batchsize = batch_size
         self.fcsize = 64 #size of hidden nodes in FC
         self.flow_length = flow_length  #the length of packet of flows
-        self.x_flow = tf.placeholder(tf.float32, shape=[None, self.flow_length, 20], name = "input_flow")   #input tensor [batch, flowlength, feature_length]
+        self.x_flow = tf.placeholder(tf.float32, shape=[None, self.flow_length, 78], name = "input_flow")   #input tensor [batch, flowlength, feature_length]
         self.y = tf.placeholder(tf.int32, shape=[None], name = "flow_class")
         self.creat_model()
 
