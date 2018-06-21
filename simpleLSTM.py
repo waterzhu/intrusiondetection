@@ -59,5 +59,5 @@ class IDSNet(object):
             accuracy = tf.reduce_mean(
                 tf.cast(tf.equal(tf.argmax(input=logits, axis=1), tf.argmax(input=labels, axis=1)), tf.float32),
                 name="accuracy")
-        print("FC DONE")
+        print("Model DONE")
         return loss, accuracy

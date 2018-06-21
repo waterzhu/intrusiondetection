@@ -25,7 +25,7 @@ class HIDSNet(object):
 
     def creat_model(self):
         state_out = self.hstateLSTM()
-        self.loss, self.acc = self.flow_classification(state_out)
+        self.loss, self.acc, self.pre_y = self.flow_classification(state_out)
 
     def hstateLSTM(self):
         cell = tf.nn.rnn_cell.LSTMCell(self.size)
@@ -57,6 +57,7 @@ class HIDSNet(object):
 
         labels = tf.one_hot(indices = self.y, depth = self.class_num)
         logits = class_output
+        pre_y = tf.argmax(logits, 1)
 
         with tf.name_scope("loss"):
             loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=labels),
@@ -65,5 +66,6 @@ class HIDSNet(object):
             accuracy = tf.reduce_mean(
                 tf.cast(tf.equal(tf.argmax(input=logits, axis=1), tf.argmax(input=labels, axis=1)), tf.float32),
                 name="accuracy")
-        print("FC DONE")
-        return loss, accuracy
+
+        print("Model DONE")
+        return loss, accuracy, pre_y

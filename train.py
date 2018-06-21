@@ -5,6 +5,7 @@ import datetime
 import random
 import tensorflow as tf
 import csv
+import sklearn as sk
 
 from simpleLSTM import IDSNet
 from simpleGRU import IDSGRUNet
@@ -162,10 +163,10 @@ def train(input_data_train, input_data_test):
                     ids.x_flow: flow_test,
                     ids.y: y
                 }
-                step, loss, accuracy = sess.run(
-                    [global_step, ids.loss, ids.acc],
+                step, loss, accuracy, pre_y = sess.run(
+                    [global_step, ids.loss, ids.acc, ids.pre_y],
                     feed_dict)
-                return loss, accuracy
+                return loss, accuracy, pre_y
 
             for epoch in range(FLAGS.num_epochs):
                 print('waiting for generating train data')
@@ -195,6 +196,8 @@ def train(input_data_train, input_data_test):
 
                         dev_loss = []
                         dev_acc = []
+                        label_y = []
+                        pred_y = []
                         for dev_batch in range(dev_num_batches):
                             test_data_feed = next(test_data)
                             test_data_x = []
@@ -202,9 +205,13 @@ def train(input_data_train, input_data_test):
                             for i in range(FLAGS.batch_size):
                                 test_data_x.append(test_data_feed[i][:-1])
                                 test_data_y.append(test_data_feed[i][-1])
-                            loss1, acc1 = dev_step(test_data_x, test_data_y)
+                                label_y.append(test_data_feed[i][-1])
+                            loss1, acc1, pre_y = dev_step(test_data_x, test_data_y)
                             dev_loss.append(loss1)
                             dev_acc.append(acc1)
+                            pred_y = pred_y + pre_y
+                        print("Recall", sk.metrics.recall_score(label_y, pred_y))
+                        print("f1_score", sk.metrics.f1_score(label_y, pred_y))
                         time_str = datetime.datetime.now().isoformat()
                         print("dev{}: step {}, loss {:g}, acc {:g}".
                               format(time_str, current_step, sum(dev_loss) / len(dev_loss),
