@@ -36,10 +36,13 @@ class HIDSNet(object):
                 if flow > 0:
                     tf.get_variable_scope().reuse_variables()
                 output, (c_state, h_state) = cell(self.x_flow[:, flow, :], state)
-                out.append(tf.reshape(h_state, shape=[-1, 1, self.size]))
+                if flow < self.flow_length-1:
+                    out.append(h_state)
+                else:
+                    out.append(h_state*10)
 #            print(out)
-            out = tf.matmul(out, self.attention)
-            out = tf.concat(out,1)
+#            out = tf.matmul(out, self.attention)
+            out = tf.concat(out, 1)
 
 #            out = output
 #            print(out)
