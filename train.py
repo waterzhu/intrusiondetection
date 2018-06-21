@@ -8,6 +8,7 @@ import csv
 
 from simpleLSTM import IDSNet
 from simpleGRU import IDSGRUNet
+from hstateLSTM import HIDSNet
 
 # TF log level
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
@@ -23,7 +24,7 @@ flags.DEFINE_integer('Feature_num', 78, 'numbers of features in one flow (defult
 # =========================================================
 flags.DEFINE_integer("first_layer_node", 64, 'nodes in first layer')
 flags.DEFINE_integer("second_layer_node", 50, 'nodes in first layer(if necessary)')
-flags.DEFINE_integer("num_classes", 2, "Number of authors(default: 7")
+flags.DEFINE_integer("num_classes", 8, "Number of authors(default: 7")
 flags.DEFINE_integer("flow_length", 5, "Number of flows in each sample")
 flags.DEFINE_float("dropout_keep_prob", 1.0, "FC layer dropout keep probability (default: 1.0)")
 # Training parameters
@@ -31,8 +32,8 @@ flags.DEFINE_float("dropout_keep_prob", 1.0, "FC layer dropout keep probability 
 flags.DEFINE_float("learning_rate", 0.003, "Learning rate (default: 0.003)")
 flags.DEFINE_integer("batch_size", 64, "Batch Size (default: 64)")
 flags.DEFINE_integer("num_epochs", 200, "Number of training epochs (default: 200)")
-flags.DEFINE_boolean("is_verbose", True, "Print loss (default: True)")
-flags.DEFINE_integer("evaluate_every", 10000, "when to dev")
+flags.DEFINE_boolean("is_verbose", False, "Print loss (default: True)")
+flags.DEFINE_integer("evaluate_every", 40000, "when to dev")
 # ===========================================================
 FLAGS = flags.FLAGS
 
@@ -114,8 +115,15 @@ def train(input_data_train, input_data_test):
                     FLAGS.flow_length,
                     FLAGS.batch_size
                 )
-            else:
+            if n == 0:
                 ids = IDSNet(
+                    FLAGS.dropout_keep_prob,
+                    FLAGS.num_classes,
+                    FLAGS.flow_length,
+                    FLAGS.batch_size
+                )
+            if n == 3:
+                ids = HIDSNet(
                     FLAGS.dropout_keep_prob,
                     FLAGS.num_classes,
                     FLAGS.flow_length,
