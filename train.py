@@ -107,7 +107,7 @@ def train(input_data_train, input_data_test):
     with tf.Graph().as_default():
         sess_config = tf.ConfigProto()
         sess_config.gpu_options.allow_growth = True
-        n = 1
+        n = 3
         with tf.Session(config=sess_config).as_default() as sess:
             if n == 1:
                 ids = IDSGRUNet(

@@ -57,7 +57,7 @@ class HIDSNet(object):
 
         labels = tf.one_hot(indices = self.y, depth = self.class_num)
         logits = class_output
-        pre_y = tf.argmax(logits, 1)
+        pre_y = tf.reshape(tf.argmax(logits, 1), shape=[1, self.batchsize])
 
         with tf.name_scope("loss"):
             loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=labels),
