@@ -24,7 +24,7 @@ flags.DEFINE_integer('Feature_num', 78, 'numbers of features in one flow (defult
 # Model params
 # =========================================================
 flags.DEFINE_integer("first_layer_node", 64, 'nodes in first layer')
-flags.DEFINE_integer("second_layer_node", 50, 'nodes in first layer(if necessary)')
+flags.DEFINE_integer("second_layer_node", 128, 'nodes in first layer(if necessary)')
 flags.DEFINE_integer("num_classes", 8, "Number of authors(default: 7")
 flags.DEFINE_integer("flow_length", 5, "Number of flows in each sample")
 flags.DEFINE_float("dropout_keep_prob", 1.0, "FC layer dropout keep probability (default: 1.0)")
@@ -206,7 +206,7 @@ def train(input_data_train, input_data_test):
                             loss1, acc1, pre_y = dev_step(test_data_x, test_data_y)
                             dev_loss.append(loss1)
                             dev_acc.append(acc1)
-                            pred_y = pred_y + pre_y
+                            pred_y = pred_y + pre_y.tolist()
  #                       print("Recall", sk.metrics.recall_score(label_y, pred_y))
   #                      print("f1_score", sk.metrics.f1_score(label_y, pred_y))
                         time_str = datetime.datetime.now().isoformat()
