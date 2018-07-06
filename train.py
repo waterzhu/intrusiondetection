@@ -38,10 +38,7 @@ flags.DEFINE_integer("evaluate_every", 40000, "when to dev")
 # ===========================================================
 FLAGS = flags.FLAGS
 
-print("\nParameters:")
-for attr, value in sorted(FLAGS.__dict__['__flags'].items()):
-    print("{}={}".format(attr.upper(), value))
-print("=" * 30)
+
 
 
 def load_data():
@@ -210,8 +207,8 @@ def train(input_data_train, input_data_test):
                             dev_loss.append(loss1)
                             dev_acc.append(acc1)
                             pred_y = pred_y + pre_y
-                        print("Recall", sk.metrics.recall_score(label_y, pred_y))
-                        print("f1_score", sk.metrics.f1_score(label_y, pred_y))
+ #                       print("Recall", sk.metrics.recall_score(label_y, pred_y))
+  #                      print("f1_score", sk.metrics.f1_score(label_y, pred_y))
                         time_str = datetime.datetime.now().isoformat()
                         print("dev{}: step {}, loss {:g}, acc {:g}".
                               format(time_str, current_step, sum(dev_loss) / len(dev_loss),
@@ -221,6 +218,10 @@ def train(input_data_train, input_data_test):
 
 def main(_):
     print("Load data...\n")
+    print("\nParameters:")
+    for attr, value in sorted(FLAGS.__dict__['__flags'].items()):
+        print("{}={}".format(attr.upper(), value))
+    print("=" * 30)
     input_train, input_test = load_data()
     print('Complete\n')
     print('Model Start...\n')
