@@ -6,6 +6,8 @@ import random
 import tensorflow as tf
 import csv
 import sklearn as sk
+from sklearn.metrics import classification_report
+
 
 from simpleLSTM import IDSNet
 from simpleGRU import IDSGRUNet
@@ -18,7 +20,7 @@ flags = tf.flags
 # logging = tf.logging
 # Data params
 # ========================================================================
-flags.DEFINE_string("Input_data", './data/train.csv', 'Data for training')
+flags.DEFINE_string("Input_data", './data/traind.csv', 'Data for training')
 flags.DEFINE_string('Test_data', './data/test.csv', 'Data for test')
 flags.DEFINE_integer('Feature_num', 78, 'numbers of features in one flow (defult:79)')
 # Model params
@@ -30,9 +32,9 @@ flags.DEFINE_integer("flow_length", 5, "Number of flows in each sample")
 flags.DEFINE_float("dropout_keep_prob", 1.0, "FC layer dropout keep probability (default: 1.0)")
 # Training parameters
 # =================================================
-flags.DEFINE_float("learning_rate", 0.003, "Learning rate (default: 0.003)")
+flags.DEFINE_float("learning_rate", 0.001, "Learning rate (default: 0.003)")
 flags.DEFINE_integer("batch_size", 64, "Batch Size (default: 64)")
-flags.DEFINE_integer("num_epochs", 200, "Number of training epochs (default: 200)")
+flags.DEFINE_integer("num_epochs", 10, "Number of training epochs (default: 200)")
 flags.DEFINE_boolean("is_verbose", False, "Print loss (default: True)")
 flags.DEFINE_integer("evaluate_every", 40000, "when to dev")
 # ===========================================================
@@ -71,7 +73,7 @@ def load_data():
         table = [row for row in reader]
 #        feature = [row[:-1] for row in table]
         label = [row[-1] for row in table]
-#        print(label)
+        print("train label over")
         train_table = []
         for i in range(len(table)):
             features = []
@@ -79,7 +81,26 @@ def load_data():
                 features.append(table[i][j*FLAGS.Feature_num:(j+1)*FLAGS.Feature_num])
             features.append(label[i])
             train_table.append(features)
-        test_table = train_table
+	table = []
+	print('Training set over')
+
+    with open(FLAGS.Test_data, 'r') as train_data:
+        reader = csv.reader(train_data)
+        table = [row for row in reader]
+#        feature = [row[:-1] for row in table]
+        label = [row[-1] for row in table]
+        print("test label over")
+        test_table = []
+        for i in range(len(table)):
+            features = []
+            for j in range(FLAGS.flow_length):
+                features.append(table[i][j*FLAGS.Feature_num:(j+1)*FLAGS.Feature_num])
+            features.append(label[i])
+            test_table.append(features)
+        table = []
+	print('test set over')
+
+#        test_table = train_table
 #    print(train_table[0])
 #    print(len(test_table[0]))
     return train_table, test_table
@@ -103,7 +124,10 @@ def read_batch(input, batch_size):
 def train(input_data_train, input_data_test):
     with tf.Graph().as_default():
         sess_config = tf.ConfigProto()
-        sess_config.gpu_options.allow_growth = True
+#	device_count = {"CPU": 30},
+#	inter_op_parallelism_threads = 2,
+#	intra_op_parallelism_threads = 2)
+#        sess_config.gpu_options.allow_growth = True
         n = 3
         with tf.Session(config=sess_config).as_default() as sess:
             if n == 1:
@@ -113,7 +137,7 @@ def train(input_data_train, input_data_test):
                     FLAGS.flow_length,
                     FLAGS.batch_size
                 )
-            if n == 0:
+            if n == 2:
                 ids = IDSNet(
                     FLAGS.dropout_keep_prob,
                     FLAGS.num_classes,
@@ -210,9 +234,14 @@ def train(input_data_train, input_data_test):
  #                       print("Recall", sk.metrics.recall_score(label_y, pred_y))
   #                      print("f1_score", sk.metrics.f1_score(label_y, pred_y))
                         time_str = datetime.datetime.now().isoformat()
-                        print("dev{}: step {}, loss {:g}, acc {:g}".
+                        print("dev:{} step: {}, loss: {:g}, acc: {:g}".
                               format(time_str, current_step, sum(dev_loss) / len(dev_loss),
                                      sum(dev_acc) / len(dev_loss)))
+			pred_y =  np.array(pred_y, dtype = 'int_')
+			label_y = np.array(label_y, dtype = 'int_')
+			print(classification_report(l_test, pre_y))
+
+
                         print("\n" + "=" * 30)
 
 
