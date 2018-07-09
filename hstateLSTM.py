@@ -13,7 +13,7 @@ class HIDSNet(object):
                  flow_length,
                  batch_size):
         self.class_num = classes
-        self.middle = 64
+        self.middle = 256
         self.dropout = dropout
         self.size = 64  #size of hidden nodes in LSTM
         self.batchsize = batch_size
@@ -31,7 +31,7 @@ class HIDSNet(object):
     def hstateLSTM(self):
         cell = tf.nn.rnn_cell.LSTMCell(self.size)
         out = []
-        with tf.variable_scope("Simplelstm"):
+        with tf.variable_scope("hiddenSimplelstm"):
             state = cell.zero_state(self.batchsize, dtype = tf.float32)
             for flow in range(self.flow_length):
                 if flow > 0:
@@ -52,12 +52,12 @@ class HIDSNet(object):
     def flow_classification(self, out):
         with tf.name_scope('fc'):
             out_dropout = tf.nn.dropout(out, self.dropout)
-            W = tf.get_variable("full", [self.fcsize, self.class_num])
-            bias = tf.Variable(tf.constant(0.1, shape=[self.class_num]), dtype=tf.float32)
-#            W2 = tf.get_variable("full2", [self.middle, self.class_num])
-#           bias2 = tf.Variable(tf.constant(0.1, shape=[self.class_num]), dtype=tf.float32)
+            W = tf.get_variable("full", [self.fcsize, self.middle])
+            bias = tf.Variable(tf.constant(0.1, shape=[self.middle]), dtype=tf.float32)
+            W2 = tf.get_variable("full2", [self.middle, self.class_num])
+            bias2 = tf.Variable(tf.constant(0.1, shape=[self.class_num]), dtype=tf.float32)
             middle_output = tf.nn.softmax(tf.matmul(out_dropout, W) + bias)
-            class_output = tf.nn.softmax(tf.matmul(out_dropout, W) + bias)
+            class_output = tf.nn.softmax(tf.matmul(middle_output, W2) + bias2)
 
         labels = tf.one_hot(indices = self.y, depth = self.class_num)
         logits = class_output

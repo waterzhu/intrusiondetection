@@ -7,7 +7,7 @@ import tensorflow as tf
 import csv
 import sklearn as sk
 from sklearn.metrics import classification_report
-
+import numpy as np
 
 from simpleLSTM import IDSNet
 from simpleGRU import IDSGRUNet
@@ -230,7 +230,7 @@ def train(input_data_train, input_data_test):
                             loss1, acc1, pre_y = dev_step(test_data_x, test_data_y)
                             dev_loss.append(loss1)
                             dev_acc.append(acc1)
-                            pred_y = pred_y + pre_y.tolist()
+                            pred_y = pred_y + pre_y.tolist()[0]
  #                       print("Recall", sk.metrics.recall_score(label_y, pred_y))
   #                      print("f1_score", sk.metrics.f1_score(label_y, pred_y))
                         time_str = datetime.datetime.now().isoformat()
@@ -239,7 +239,9 @@ def train(input_data_train, input_data_test):
                                      sum(dev_acc) / len(dev_loss)))
 			pred_y =  np.array(pred_y, dtype = 'int_')
 			label_y = np.array(label_y, dtype = 'int_')
-			print(classification_report(l_test, pre_y))
+			print(pred_y[:10])
+			print(label_y[:10])
+			print(classification_report(label_y, pred_y))
 
 
                         print("\n" + "=" * 30)
