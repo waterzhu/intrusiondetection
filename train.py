@@ -7,6 +7,7 @@ import tensorflow as tf
 import csv
 import sklearn as sk
 from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
 import numpy as np
 
 from simpleLSTM import IDSNet
@@ -20,23 +21,24 @@ flags = tf.flags
 # logging = tf.logging
 # Data params
 # ========================================================================
-flags.DEFINE_string("Input_data", './data/traind.csv', 'Data for training')
-flags.DEFINE_string('Test_data', './data/test.csv', 'Data for test')
+flags.DEFINE_string("Input_data", './data/test5ss.csv', 'Data for training')
+flags.DEFINE_string('Test_data', './data/test5ss.csv', 'Data for test')
 flags.DEFINE_integer('Feature_num', 78, 'numbers of features in one flow (defult:79)')
 # Model params
 # =========================================================
-flags.DEFINE_integer("first_layer_node", 64, 'nodes in first layer')
-flags.DEFINE_integer("second_layer_node", 128, 'nodes in first layer(if necessary)')
-flags.DEFINE_integer("num_classes", 8, "Number of authors(default: 7")
+flags.DEFINE_integer("LSTM_hidden_node", 512, 'nodes in lstm layer')
+flags.DEFINE_integer("fcmiddle_node", 0, 'nodes in second layer(if necessary)')
+flags.DEFINE_integer("num_classes", 8, "Number of authors(default: 8")
 flags.DEFINE_integer("flow_length", 5, "Number of flows in each sample")
 flags.DEFINE_float("dropout_keep_prob", 1.0, "FC layer dropout keep probability (default: 1.0)")
+flags.DEFINE_integer("Attentions", 10 ,"attention on the chosen flow")
 # Training parameters
 # =================================================
-flags.DEFINE_float("learning_rate", 0.001, "Learning rate (default: 0.003)")
+flags.DEFINE_float("learning_rate", 0.0001, "Learning rate (default: 0.003)")
 flags.DEFINE_integer("batch_size", 64, "Batch Size (default: 64)")
-flags.DEFINE_integer("num_epochs", 10, "Number of training epochs (default: 200)")
+flags.DEFINE_integer("num_epochs", 40, "Number of training epochs (default: 200)")
 flags.DEFINE_boolean("is_verbose", False, "Print loss (default: True)")
-flags.DEFINE_integer("evaluate_every", 40000, "when to dev")
+flags.DEFINE_integer("evaluate_every", 2000, "when to dev")
 # ===========================================================
 FLAGS = flags.FLAGS
 
@@ -83,7 +85,7 @@ def load_data():
             train_table.append(features)
 	table = []
 	print('Training set over')
-
+    
     with open(FLAGS.Test_data, 'r') as train_data:
         reader = csv.reader(train_data)
         table = [row for row in reader]
@@ -99,8 +101,8 @@ def load_data():
             test_table.append(features)
         table = []
 	print('test set over')
-
-#        test_table = train_table
+    
+#    test_table = train_table
 #    print(train_table[0])
 #    print(len(test_table[0]))
     return train_table, test_table
@@ -139,6 +141,7 @@ def train(input_data_train, input_data_test):
                 )
             if n == 2:
                 ids = IDSNet(
+		    FLAGS.LSTM_hidden_node,
                     FLAGS.dropout_keep_prob,
                     FLAGS.num_classes,
                     FLAGS.flow_length,
@@ -146,6 +149,9 @@ def train(input_data_train, input_data_test):
                 )
             if n == 3:
                 ids = HIDSNet(
+		    FLAGS.LSTM_hidden_node,
+		    FLAGS.fcmiddle_node,
+		    FLAGS.Attentions,
                     FLAGS.dropout_keep_prob,
                     FLAGS.num_classes,
                     FLAGS.flow_length,
@@ -239,9 +245,10 @@ def train(input_data_train, input_data_test):
                                      sum(dev_acc) / len(dev_loss)))
 			pred_y =  np.array(pred_y, dtype = 'int_')
 			label_y = np.array(label_y, dtype = 'int_')
-			print(pred_y[:10])
-			print(label_y[:10])
+#			print(pred_y[:10])
+#			print(label_y[:10])
 			print(classification_report(label_y, pred_y))
+			print(confusion_matrix(label_y, pred_y))
 
 
                         print("\n" + "=" * 30)
